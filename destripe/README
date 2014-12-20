@@ -1,0 +1,5 @@
+This folder contains the core parts of destriping algorithm,
+which are split into different files corresponding to different subroutines.
+The destriping functions are interfaced in destripe.h header file.
+Additional two-dimensional array allocation utility subroutines are in allocate_2d.c.
+
