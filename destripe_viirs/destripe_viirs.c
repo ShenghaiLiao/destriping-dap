@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "omp.h"
 #include "readwrite_viirs.c"
 #include "destripe.h"

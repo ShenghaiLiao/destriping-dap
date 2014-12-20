@@ -1,16 +1,48 @@
-# This makefile is designed for Intel C compiler 14.0.3, currently available on rhw1064.star1.nesdis.noaa.gov
-# It relies on libraries and library include files for this version of Intel C compiler available in 
-# /data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe (mounted on rhw1027),
-# and produces a 64 bit executable.
-# It needs to be modified for compilation in other environments.
+INC=-I. -I../destripe/ -I/usr/include
+LIBS=-lfftw3f_omp -lfftw3f -lhdf5 -lsz -lz -lpthread -lm
+LDFLAGS=$(LIBS)
 
-CC=icc
+# uncomment for ICC
+#CC=icc
+#LD=icc
+#CFLAGS=-openmp -O3 -Zp16 -falign-functions=16 $(INC)
+#LDFLAGS += -liomp5
 
-CFLAGS=-openmp -O3 -Zp16 -falign-functions=16
+# uncomment for GCC
+CC=gcc
+LD=gcc
+CFLAGS=-g -Wall -fopenmp -O2 $(INC)
+LDFLAGS += -fopenmp
 
-INC= -I. -I../destripe/  -I/usr/include  -I /data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe/include/
-LIBS= -L/data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe/lib/ -lfftw3f_omp -lfftw3f -lhdf5 -lsz -lz -liomp5 -lpthread
 
-all: 
-	$(CC) $(CFLAGS) $(INC) destripe_viirs.c -o destripe_viirs $(LIBS)
+PROG=destripe_viirs
 
+OFILES=\
+	destripe_viirs.o\
+
+HFILES=\
+	readwrite_viirs.c\
+	resample_viirs.h\
+	../destripe/destripe.h\
+	../destripe/allocate_2d.c\
+	../destripe/compute_binary_matrix.c\
+	../destripe/compute_meshgrid_dct.c\
+	../destripe/compute_nly_filter.c\
+	../destripe/compute_poisson_rec.c\
+	../destripe/destripe_main.c\
+	../destripe/get_composite_number.c\
+
+all: $(PROG)
+
+$(PROG): $(OFILES)
+	$(LD) -o $(PROG) $(OFILES) $(LDFLAGS)
+
+
+%.o: %.c $(HFILES)
+	$(CC) $(CFLAGS) -c $<
+
+install: $(PROG)
+	cp $(PROG) /usr/local/bin/
+
+clean:
+	rm -f $(OFILES) $(PROG)
