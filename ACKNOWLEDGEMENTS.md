@@ -1,23 +1,16 @@
-Copyright 2014, NOAA STAR SST Team. All Rights Reserved.
-
-Destriping algorithm for VIIRS/MODIS Ocean Products.
-
-This software was developed by the SST group at NOAA STAR (Lead:
-A. Ignatov).
-
-##### Algorithm Design: 
+##### Algorithm Developer: 
 Marouan Bouali (Formerly: NOAA STAR and CIRA, USA; Currently: U. San
 Paolo, Brazil)
 
 ##### Consultant(s):
-Alexander Ignatov (NOAA STAR, USA)
-Yuri Kihai (NOAA STAR and GST, USA)
+* Alexander Ignatov (NOAA STAR, USA)
+* Yuri Kihai (NOAA STAR and GST, USA)
 
-##### Senior Software Developer(s): 
+##### Software Implementation: 
 Karlis Mikelsons (NOAA STAR and GST, USA)
 
 ##### The software supported and monitored by:
-NOAA STAR SST Team (John Stroup, NOAA STAR and SGT, USA)
+NOAA STAR SST Team (John Stroup, NOAA STAR and GST, USA)
 
 ##### The Algorithm and Software developed, supported and monitored by the NOAA STAR SST Team under:
 * JPSS SST project (funded by the JPSS Program Office), and
