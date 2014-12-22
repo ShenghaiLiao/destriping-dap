@@ -17,8 +17,12 @@ Besides standard C library functions, this code relies on the following
 libraries:
 * [fftw3 library](http://www.fftw.org/) (float version),
 * [HDF5 library](http://www.hdfgroup.org/HDF5/) (and dependencies, such as libsz, libz),
-* OpenMP library (such as libiomp5 or [libgomp](https://gcc.gnu.org/projects/gomp/)), and
-* libpthread.
+* libpthread, and
+* OpenMP library (such as libiomp5 or [libgomp](https://gcc.gnu.org/projects/gomp/))
+
+The code is designed to run multiple threads using OpenMP. 
+The number of threads can be set before execution by
+setting environment variable `OMP_NUM_THREADS`.
 
 ## Installation
 
@@ -27,10 +31,6 @@ need to adapt the `Makefile` for your system. The installed binary is named
 `destripe_viirs`.
 
 ## Usage
-
-The code is designed to run multiple threads using OpenMP. 
-The optimal number of threads needs to be set before execution by
-setting environment variable `OMP_NUM_THREADS`.
 
 On input, it requires two command line arguments: First argument should
 be the name of hdf5 file containing VIIRS SDR data, Second argument is the
