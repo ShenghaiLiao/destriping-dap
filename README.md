@@ -2,8 +2,9 @@
 ## Destriping algorithm for VIIRS/MODIS Ocean Products.
 
 This software was developed by the SST group at NOAA STAR (Lead:
-A. Ignatov). It is designed to destripe VIIRS Level 1b (SDR) data.
-See the following publication for more details on the algorithm:
+A. Ignatov). It is designed to destripe VIIRS Level 1b (SDR) and MODIS
+Level 1b data.  See the following publication for more details on the
+algorithm:
 
     Bouali, Marouan, and Alexander Ignatov, 2014: Adaptive Reduction
     of Striping for Improved Sea Surface Temperature Imagery from Suomi
@@ -16,7 +17,8 @@ See the following publication for more details on the algorithm:
 Besides standard C library functions, this code relies on the following
 libraries:
 * [fftw3 library](http://www.fftw.org/) (float version),
-* [HDF5 library](http://www.hdfgroup.org/HDF5/) (and dependencies, such as libsz, libz),
+* [HDF5 library](http://www.hdfgroup.org/HDF5/) (and dependencies, such as libsz, libz) for `destripe_viirs`,
+* [HDF4 library](http://www.hdfgroup.org/products/hdf4/) (and dependencies, such as libjpeg, libsz, libz) for `destripe_modis`,
 * libpthread, and
 * OpenMP library (such as libiomp5 or [libgomp](https://gcc.gnu.org/projects/gomp/))
 
@@ -26,11 +28,12 @@ setting environment variable `OMP_NUM_THREADS`.
 
 ### Installation
 
-To install, run `make install` inside destripe_viirs directory. You may
-need to adapt the `Makefile` for your system. The installed binary is named
-`destripe_viirs`.
+To install, run `make install` inside destripe_viirs or destripe_modis
+directory. You may need to adapt the `Makefile` for your system. The
+installed binary is named `destripe_viirs` or `destripe_modis`
+respectively.
 
-### Usage
+### Usage for VIIRS
 
 On input, it requires two command line arguments: First argument should
 be the name of hdf5 file containing VIIRS SDR data, Second argument is the
@@ -64,7 +67,7 @@ $ h5dump -H SVM12_npp_d20140410_t2130000_e2140001_b12705_c20140414174333267547_s
 Next, run the VIIRS destriping program. One OpenMP thread is fast enough for us:
 ```
 $ export OMP_NUM_THREADS=1
-$ ./destripe_viirs SVM12_npp_d20140410_t2130000_e2140001_b12705_c20140414174333267547_star_dev.h5 SVM12_npp_d20140410_t2130000_e2140001_b12705_c20140414174333267547_star_dev.h5 destriping_viirs_param.txt
+$ destripe_viirs SVM12_npp_d20140410_t2130000_e2140001_b12705_c20140414174333267547_star_dev.h5 destriping_viirs_param.txt
 destripe_viirs SVM12_npp_d20140410_t2130000_e2140001_b12705_c20140414174333267547_star_dev.h5 destriping_viirs_param.txt
 numthreads = 1 maxthreads =  1
 5 16 8 0.001000 0.020000 0.050000 0.000000 0.250000
@@ -112,6 +115,11 @@ $ h5dump -H SVM12_npp_d20140410_t2130000_e2140001_b12705_c20140414174333267547_s
          }
 ...
 ```
+
+### Usage for MODIS
+
+The usage of `destripe_modis` is similar to `destripe_viirs`. See
+[destripe_modis/README](destripe_modis/README) file for more details.
 
 ### License
 
