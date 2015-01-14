@@ -1,2 +1,3 @@
 *.o
 destripe_viirs/destripe_viirs
+destripe_modis/destripe_modis

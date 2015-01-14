@@ -1,16 +1,36 @@
-# This makefile is designed for Intel C compiler 14.0.3, currently available on rhw1064.star1.nesdis.noaa.gov
-# It relies on libraries and library include files for this version of Intel C compiler available in
-# /data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe (mounted on rhw1027),
-# and produces a 64 bit executable.
-# It needs to be modified for compilation in other environments.
+INC=-I. -I../destripe/ -I/usr/include -I/usr/include/hdf/
+LIBS=-lfftw3f_omp -lfftw3f  -lmfhdf -ldf -lpthread -lm
+CC=gcc
+LD=gcc
+CFLAGS=-g -fopenmp -O2 $(INC)
+LDFLAGS=$(LIBS) -fopenmp
+TARG=destripe_modis
+OFILES=\
+	destripe_modis.o\
 
-CC=icc
+HFILES=\
+	readwrite_modis.c\
+	../destripe/allocate_2d.c\
+	../destripe/compute_binary_matrix.c\
+	../destripe/compute_meshgrid_dct.c\
+	../destripe/compute_nly_filter.c\
+	../destripe/compute_poisson_rec.c\
+	../destripe/destripe.h\
+	../destripe/destripe_main.c\
+	../destripe/destripe_main_padframe.c\
+	../destripe/fill_restore_viirs_bowtie.c\
+	../destripe/get_nif_ndf.c\
 
-CFLAGS=-openmp -O3 -Zp16 -falign-functions=16
+all: $(TARG)
 
-INC= -I. -I../destripe/  -I/usr/include  -I /data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe/include/
-LIBS=  -L/data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe/lib/ -lfftw3f_omp -lfftw3f -lmfhdf -ldf -ljpeg -lsz -lz -liomp5 -lpthread
+$(TARG): $(OFILES)
+	$(LD) -o $(TARG) $(OFILES) $(LDFLAGS)
 
-all: 
-	$(CC) $(CFLAGS) $(INC) destripe_modis.c -o destripe_modis $(LIBS)
+%.o: %.c $(HFILES)
+	$(CC) $(CFLAGS) -c $<
 
+install: $(TARG)
+	cp $(TARG) /usr/local/bin/
+
+clean:
+	rm -f $(OFILES) $(TARG)

@@ -1,0 +1,16 @@
+# This makefile is designed for Intel C compiler 14.0.3, currently available on rhw1064.star1.nesdis.noaa.gov
+# It relies on libraries and library include files for this version of Intel C compiler available in
+# /data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe (mounted on rhw1027),
+# and produces a 64 bit executable.
+# It needs to be modified for compilation in other environments.
+
+CC=icc
+
+CFLAGS=-openmp -O3 -Zp16 -falign-functions=16
+
+INC= -I. -I../destripe/  -I/usr/include  -I /data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe/include/
+LIBS=  -L/data/data025/ykihai/Fortran/CLAVRX/lib64_Intel_Compiler14.03_ThreadSafe/lib/ -lfftw3f_omp -lfftw3f -lmfhdf -ldf -ljpeg -lsz -lz -liomp5 -lpthread
+
+all: 
+	$(CC) $(CFLAGS) $(INC) destripe_modis.c -o destripe_modis $(LIBS)
+
