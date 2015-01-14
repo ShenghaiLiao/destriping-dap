@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Input_dir=$(cat ~/Destriping_GPU/Destriping_IO_config_VIIRS.txt | head -n2 | tail -n1 | tr = ' ' | awk '{print $2}')
+# Output_dir=$(cat ~/Destriping_GPU/Destriping_IO_config_VIIRS.txt | head -n3 | tail -n1 | tr = ' ' | awk '{print $2}')
+
+paramfile=destriping_viirs_param.txt
+
+if [[ $# -ge 2 ]]
+then
+  Input_dir=$1
+  Output_dir=$2
+else
+  echo "Usage:    $0 Input_striped_dir Output_destriped_dir"
+  exit 0
+fi
+
+echo "Input_dir = $Input_dir"
+echo "Output_dir = $Output_dir"
+
+
+for f in $Input_dir/SVM*.h5
+  do 
+#    echo $f
+    if [[ ! -f "$f" ]] 
+    then 
+      continue
+    fi
+    fname=$(basename $f)
+    band=${fname:3:2}
+
+    # echo "$fname band = $band"
+    if [[ $band -ne "12" ]] && [[ $band -ne "13" ]] && [[ $band -ne "14" ]] && [[ $band -ne "15" ]] && [[ $band -ne "16" ]] 
+    then
+      echo "$Output_dir/$fname  skipping band $band"
+      continue
+    fi
+
+    isproc=0
+    if [[ -f  $Output_dir/SVM${band}_Processed_files ]]
+    then 
+      isproc=$(grep $fname $Output_dir/SVM${band}_Processed_files | wc -l)
+    fi
+#    echo " isproc = $isproc"
+
+    if [ "$isproc" -gt 0 ]
+    then
+      echo "$Output_dir/$fname  already processed"
+    else
+#      echo "copy  $f to   $Output_dir/$fname"
+      cp -f $f $Output_dir/$fname
+      echo "$Output_dir/$fname  destriping"
+      ./destripe_viirs $Output_dir/$fname $paramfile >>  $Output_dir/output_viirs.dat
+      rc=$?
+      if [[ $rc == 0 ]]
+      then
+        datestring=`date '+%Y%m%d%H%M%S'`
+#        echo "$fname $datestring"
+        echo "$fname $datestring" >> $Output_dir/SVM${band}_Processed_files
+      else
+        echo "PROBLEM: $Output_dir/$fname may not be destriped correctly (exit code = $rc) -  will try again next time"
+      fi
+    fi
+done 

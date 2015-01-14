@@ -8,7 +8,7 @@ int readwrite_viirs(unsigned short **buffer, unsigned long long * dimsizes, floa
 
   hid_t   file_id, dataset, dataset_factors, dataspace;
   herr_t  hdferr;
-  int     info, rank_BT, i, iprint = 1;
+  int     info, rank_BT, i, iprint = 0;
   float   gain_offset[2];
   unsigned long long   dims[2], maxdimsizes[2];
 
@@ -73,7 +73,7 @@ int readwrite_viirs_float(float **buffer, unsigned long long * dimsizes, char * 
 
   hid_t   file_id, dataset, dataset_factors, dataspace;
   herr_t  hdferr;
-  int     info, rank_BT, i, iprint = 1;
+  int     info, rank_BT, i, iprint = 0;
   unsigned long long   dims[2], maxdimsizes[2];
 
   if(iprint>0) printf("BTstr  = %s\n", BTstr);

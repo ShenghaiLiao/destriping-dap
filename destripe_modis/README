@@ -1,0 +1,21 @@
+This program is designed to destripe MODIS Level 1b data. 
+
+On input, it requires two command line arguments:
+First argument should be the name of hdf4 file containing MODIS Level 1b data,
+Second argument is the parameter file (sample included in this folder).
+
+On output, the hdf4 file with MODIS Level 1b data is modified - 
+the bands that were destriped are replaced by the destriped data.
+In addition, it also adds (or updates) a destriping attribute for 
+each data field which it has updated with destriped data. 
+
+Besides standard C library functions, this code relies on the main destriping code, through "destripe.h",
+as well as following libraries: fftw3 library (float version), HDF4 library (and dependencies, such as libjpeg, libsz, libz),
+OpenMP library (such as libiomp5 or libgomp), and libpthread.
+
+The code is designed to run multiple threads using OpenMP. 
+The optimal number of threads needs to be set before execution by
+setting environment variable OMP_NUM_THREADS.
+
+
+

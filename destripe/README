@@ -1,5 +1,26 @@
 This folder contains the core parts of destriping algorithm,
-which are split into different files corresponding to different subroutines.
+which are split into different files corresponding to different functions.
 The destriping functions are interfaced in destripe.h header file.
 Additional two-dimensional array allocation utility subroutines are in allocate_2d.c.
+
+-------------------------------------------------------------------------------------------
+This code was developed in NOAA/NESDIS/STAR SST and Ocean Color groups by Karlis Mikelsons,
+and is partially based on an earlier version of destriping algorithm for use with the 
+Sea Surface Temperature (SST) data written by Marouan Bouali at NOAA/NESDIS/STAR SST group. 
+
+Please acknowledge any use of these codes in your presentations
+and publications by citing the following publications:
+
+1. M. Bouali and A. Ignatov, "Adaptive Reduction of Striping
+   for Improved Sea Surface Temperature Imagery 
+   from Suomi National Polar-Orbiting Partnership (S-NPP) 
+   Visible Infrared Imaging Radiometer Suite (VIIRS)", 
+   J. Atmos. Oceanic Technol., 31, 150–163 (2014).
+
+2. K. Mikelsons, M. Wang, L. Jiang, and M. Bouali, 
+   "Destriping algorithm for improved satellite-derived
+   ocean color product imagery," Opt. Express  22, 28058-28070 (2014).
+
+Please report any bugs to Karlis.Mikelsons@noaa.gov
+-------------------------------------------------------------------------------------------
 
