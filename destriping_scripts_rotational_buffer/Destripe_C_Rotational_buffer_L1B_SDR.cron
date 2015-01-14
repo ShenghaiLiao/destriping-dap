@@ -1,1 +1,0 @@
-0 */6 * * * /data/home001/mikelson/destriping_scripts_rotational_buffer/script_rotational_buffer_destripe >> /data/home001/mikelson/destriping_scripts_rotational_buffer/script_rotational_buffer_destripe.log

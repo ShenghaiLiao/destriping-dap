@@ -1,3 +1,23 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------------------- //
+// This code was developed in NOAA/NESDIS/STAR SST group by Karlis Mikelsons,                  //
+// and is partially based on an earlier version of destriping algorithm for use with the       //
+// Sea Surface Temperature (SST) data written by Marouan Bouali at NOAA/NESDIS/STAR SST group. //
+//                                                                                             //
+// Please acknowledge any use of these codes in your presentations                             //
+// and publications by citing the following publication:                                       //
+//                                                                                             //
+// 1. M. Bouali and A. Ignatov, "Adaptive Reduction of Striping                                //
+//    for Improved Sea Surface Temperature Imagery                                             //
+//    from Suomi National Polar-Orbiting Partnership (S-NPP)                                   //
+//    Visible Infrared Imaging Radiometer Suite (VIIRS)",                                      //
+//    J. Atmos. Oceanic Technol., 31, 150–163 (2014).                                          //
+//                                                                                             //
+// Please report any bugs to Karlis.Mikelsons@noaa.gov                                         //
+// ------------------------------------------------------------------------------------------- //
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 This program is designed to destripe VIIRS Level 1b (SDR) data. 
 
 On input, it requires two command line arguments:

@@ -43,6 +43,9 @@
 //!; OUPUTS:
 //!;   output_image[sy][sx] destriped image 
 //!;   binary_M[sy][sx]     binary matrice that defines the spatial domain to be destriped
+//!;
+//!; RETURN VALUE:
+//!;   on success, returns 0; other values indicate failure
 //!;    
 //!; HISTORY:
 //!;   2012-03-01 - Marouan Bouali
@@ -91,7 +94,7 @@ int destripe_main(float ** input_image, float ** output_image, int ** binary_M, 
 
     // initialize threads for FFTW3 library
     int i = fftwf_init_threads();
-    if(i==0) { printf("Cannot init threads\n"); return -1; }
+    if(i==0) { printf("ERROR: Cannot init fftw threads\n"); return -1; }
     int nthreads = omp_get_max_threads();
     fftwf_plan_with_nthreads(nthreads);
     printf("fftw3 initialized on %i threads\n", nthreads);

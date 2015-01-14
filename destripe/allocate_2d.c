@@ -13,6 +13,10 @@
 
 #include "stdlib.h"
 
+
+// these are all routines for allocation of a 2d array arr of size arr[n1][n2] for different data types
+// of course, C++ template would be more elegant, but this way we can get by with just C compiler
+
 char ** allocate_2d_c(int n1, int n2){
     int i;
     char ** p = NULL;
