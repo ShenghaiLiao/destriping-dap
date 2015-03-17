@@ -1,15 +1,17 @@
 INC=-I. -I../destripe/ -I/usr/include
-LIBS=-lfftw3f_omp -lfftw3f -lhdf5 -lz -lpthread -lm
-CC=gcc
-LD=gcc
+LIBS=-lfftw3f_omp -lfftw3f -lhdf5 -lz -lpthread -lm -lopencv_core
+CC=g++
+LD=g++
 CFLAGS=-g -fopenmp -O2 $(INC)
 LDFLAGS=$(LIBS) -fopenmp
 TARG=destripe_viirs
 OFILES=\
 	destripe_viirs.o\
+	resample_viirs.o\
 
 HFILES=\
 	readwrite_viirs.c\
+	resample_viirs.h\
 	../destripe/allocate_2d.c\
 	../destripe/compute_binary_matrix.c\
 	../destripe/compute_meshgrid_dct.c\
