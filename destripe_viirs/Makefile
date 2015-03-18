@@ -1,6 +1,6 @@
 INC=-I. -I../destripe/ -I/usr/include
 LIBS=-lfftw3f_omp -lfftw3f -lhdf5 -lz -lpthread -lm -lopencv_core
-CC=g++
+CXX=g++
 LD=g++
 CFLAGS=-g -fopenmp -O2 $(INC)
 LDFLAGS=$(LIBS) -fopenmp
@@ -29,7 +29,10 @@ $(TARG): $(OFILES)
 	$(LD) -o $(TARG) $(OFILES) $(LDFLAGS)
 
 %.o: %.c $(HFILES)
-	$(CC) $(CFLAGS) -c $<
+	$(CXX) $(CFLAGS) -c $<
+
+%.o: %.cc $(HFILES)
+	$(CXX) $(CFLAGS) -c $<
 
 install: $(TARG)
 	cp $(TARG) /usr/local/bin/
