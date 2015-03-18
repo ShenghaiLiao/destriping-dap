@@ -121,7 +121,7 @@ int readwrite_viirs(unsigned short **buffer, unsigned long long * dimsizes, floa
         return -1;
     }
 
-    if(iprint>0) printf("dimsizes = %i  %i\n", dimsizes[0], dimsizes[1]);
+    if(iprint>0) printf("dimsizes = %llu  %llu\n", dimsizes[0], dimsizes[1]);
 
 
     if(readwrite==0) {
@@ -243,7 +243,7 @@ int readwrite_viirs_float(float **buffer, unsigned long long * dimsizes, char * 
         return -1;
     }
 
-    if(iprint>0) printf("dimsizes = %i  %i\n", dimsizes[0], dimsizes[1]);
+    if(iprint>0) printf("dimsizes = %llu  %llu\n", dimsizes[0], dimsizes[1]);
 
 
 

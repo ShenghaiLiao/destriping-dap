@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
     char attrfieldstr[128], attrnamestr[128], btstr[128], latstr[128], lonstr[128], geofile[1024];
 
     // destriping attribute field
-    sprintf(attrfieldstr,"Data_Products/VIIRS-M%i-SDR/VIIRS-M%i-SDR_Aggr\0", is, is);
+    sprintf(attrfieldstr,"Data_Products/VIIRS-M%i-SDR/VIIRS-M%i-SDR_Aggr", is, is);
     printf("Destriping atribute location = %s\n", attrfieldstr);
 
     // generate names of main data fields to be destriped
@@ -155,14 +155,14 @@ int main(int argc, char** argv) {
     if(is<12) { 
 
         // for M11 and below, destripe Reflectance
-        sprintf(btstr, "All_Data/VIIRS-M%i-SDR_All/Reflectance\0", is);
-        sprintf(attrnamestr, "DestripingReflectance\0");
+        sprintf(btstr, "All_Data/VIIRS-M%i-SDR_All/Reflectance", is);
+        sprintf(attrnamestr, "DestripingReflectance");
     } 
     else {
 
         // for M12 and above, destripe Brightness Temperature
-        sprintf(btstr, "All_Data/VIIRS-M%i-SDR_All/BrightnessTemperature\0", is);
-        sprintf(attrnamestr, "DestripingBrightnessTemperature\0");
+        sprintf(btstr, "All_Data/VIIRS-M%i-SDR_All/BrightnessTemperature", is);
+        sprintf(attrnamestr, "DestripingBrightnessTemperature");
     }
     printf("Destriping atribute name = %s\n", attrnamestr);
     printf("Data location = %s\n", btstr);          // name of main data field to be destriped
@@ -170,12 +170,12 @@ int main(int argc, char** argv) {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // lat, lon data fields in geofile - normally not needed
-    sprintf(latstr, "All_Data/VIIRS-MOD-GEO_All/Latitude\0");
-    sprintf(lonstr, "All_Data/VIIRS-MOD-GEO_All/Longitude\0");
+    sprintf(latstr, "All_Data/VIIRS-MOD-GEO_All/Latitude");
+    sprintf(lonstr, "All_Data/VIIRS-MOD-GEO_All/Longitude");
 
     // generate the name of the corresponding geofile
     // start with provided SVM file name
-    sprintf(geofile, "%s\0", argv[1]);
+    sprintf(geofile, "%s", argv[1]);
   
     for(j=(strlen(argv[1])-6); j>=0; j--){
         i = j;
