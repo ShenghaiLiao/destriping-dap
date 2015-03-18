@@ -28,13 +28,59 @@
 #include "get_nif_ndf.c"
 #include "resample_viirs.h"
 
+static int run(char *h5file, char *paramfile, int resample);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-int main(int argc, char** argv) {
+char *progname;
 
+static void
+usage()
+{
+    printf("usage: %s [-r] viirs_h5_file destriping_parameter_file_viirs.txt\n", progname);
+    printf("	-r	Resample destriping output using latitude\n");
+    exit(2);
+}
+
+int
+main(int argc, char** argv)
+{
+    int resam, nthreads;
+
+    progname = argv[0];
+    argc--;
+    argv++;
+
+    resam = 0;
+    while(argc > 0 && argv[0][0] == '-'){
+        if(strcmp(argv[0], "--") == 0){
+            argc--;
+            argv++;
+            break;
+        }
+        if(strcmp(argv[0], "-r") != 0)
+            usage();
+        resam = 1;
+        argc--;
+        argv++;
+    }
+    if(argc != 2)
+        usage();
+
+    // echo command line
+    printf("destripe_viirs %s%s %s\n", resam?"-r ":"", argv[0], argv[1]);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // set the number of OpenMP threads  
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    nthreads = omp_get_max_threads();
+    omp_set_num_threads(nthreads); 
+    printf("numthreads = %i maxthreads =  %i\n", omp_get_num_threads(), omp_get_max_threads());
+
+    return run(argv[0], argv[1], resam);
+}
+
+static int
+run(char *h5file, char *paramfile, int resam)
+{
     unsigned short *buffer1  = NULL;
     float          *bufferf1 = NULL;
     float          *bufferf2 = NULL;
@@ -45,7 +91,7 @@ int main(int argc, char** argv) {
     int ix, iy, sx, sy;
     double r1, scale, offset, lambda;
 
-    int Ndet, Niter, nthreads;
+    int Ndet, Niter;
     int Ndet_arr[40], Niter_arr[40], isband[40];
     float Qmin, Qmax, Thresh_x, Thresh_y, NEdQ, scalefact = 1000.0;
     float Qplotmin_chlor, Qplotmax_chlor, Qplotmin_kd490, Qplotmax_kd490, Qplotmin[40], Qplotmax[40];
@@ -55,28 +101,9 @@ int main(int argc, char** argv) {
     int   ** binary_M;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    // make sure we have at least two command line arguments
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    if(argc<3) { 
-        printf("Not enough arguments!\nUsage:\n");
-        printf(" %s viirs_h5_file destriping_parameter_file_viirs.txt\n", argv[0]);
-        return -9;
-    }
-
-    // echo command line
-    printf("destripe_viirs %s %s\n", argv[1], argv[2]);
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    // set the number of OpenMP threads  
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    nthreads = omp_get_max_threads();
-    omp_set_num_threads(nthreads); 
-    printf("numthreads = %i maxthreads =  %i\n", omp_get_num_threads(), omp_get_max_threads());
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////
     // open parameter file
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    FILE *fp = fopen(argv[2],"r");
+    FILE *fp = fopen(paramfile,"r");
     if(fp==NULL) { 
         printf("ERROR: Cannot open param. file\n");
         return -8;
@@ -112,11 +139,11 @@ int main(int argc, char** argv) {
     // extract the name of band from the file
     //////////////////////////////////////////////////////////////////////////////////////////////////
     is = 0; 
-    for(i=(strlen(argv[1])-6); i>=0; i--) {
+    for(i=(strlen(h5file)-6); i>=0; i--) {
 
         // look for sequence "SVM", then following two chars give band number
-        if( (argv[1][i]=='S') && (argv[1][i+1]=='V') && (argv[1][i+2]=='M') ){
-            is = (argv[1][i+3]-'0')*10 + (argv[1][i+4]-'0');
+        if( (h5file[i]=='S') && (h5file[i+1]=='V') && (h5file[i+2]=='M') ){
+            is = (h5file[i+3]-'0')*10 + (h5file[i+4]-'0');
             break;
         }
     }
@@ -175,11 +202,11 @@ int main(int argc, char** argv) {
 
     // generate the name of the corresponding geofile
     // start with provided SVM file name
-    sprintf(geofile, "%s", argv[1]);
+    sprintf(geofile, "%s", h5file);
   
-    for(j=(strlen(argv[1])-6); j>=0; j--){
+    for(j=(strlen(h5file)-6); j>=0; j--){
         i = j;
-        if(argv[1][j]=='/') { 
+        if(h5file[j]=='/') { 
             i = j + 1; 
             break; 
         }
@@ -200,8 +227,8 @@ int main(int argc, char** argv) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // read data
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    if(is!=13){  status = readwrite_viirs(&buffer1, dims1, &scale1, &offset1, argv[1], btstr, 0); } 
-    else {       status = readwrite_viirs_float( &bufferf1, dims1, argv[1], btstr, 0); }
+    if(is!=13){  status = readwrite_viirs(&buffer1, dims1, &scale1, &offset1, h5file, btstr, 0); } 
+    else {       status = readwrite_viirs_float( &bufferf1, dims1, h5file, btstr, 0); }
     if(status!=0) { 
         printf("ERROR: Cannot read VIIRS data!\n");  
         return 10*status; 
@@ -211,11 +238,18 @@ int main(int argc, char** argv) {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // read geolocation data
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    int isgeo = 1;
-    status = readwrite_viirs_float( &bufferf2, dims1, geofile, latstr, 0);
-    if(status!=0) { printf("Cannot read VIIRS (lat) geolocation data!\n"); isgeo = 0; }
-    status = readwrite_viirs_float( &bufferf3, dims1, geofile, lonstr, 0);
-    if(status!=0) { printf("Cannot read VIIRS (lon) geolocation data!\n"); isgeo = 0; }
+    if(resam) {
+        status = readwrite_viirs_float( &bufferf2, dims1, geofile, latstr, 0);
+        if(status!=0) {
+            fprintf(stderr, "Cannot read VIIRS (lat) geolocation data!\n");
+            exit(1);
+        }
+        status = readwrite_viirs_float( &bufferf3, dims1, geofile, lonstr, 0);
+        if(status!=0) {
+            fprintf(stderr, "Cannot read VIIRS (lon) geolocation data!\n");
+            exit(1);
+        }
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -281,7 +315,7 @@ int main(int argc, char** argv) {
     /////////////////////////////////////////////////////////////
     // reample data
     /////////////////////////////////////////////////////////////
-    if(isgeo==1) {
+    if(resam) {
 
         // allocate geolocation arrays
         lat      = allocate_2d_f(sy, sx);
@@ -325,7 +359,7 @@ int main(int argc, char** argv) {
         } // for ix = all data in 2d array
 
         // write destriped data back to file as short int
-        status = readwrite_viirs(&buffer1, dims1, &scale1, &offset1, argv[1], btstr, 1);
+        status = readwrite_viirs(&buffer1, dims1, &scale1, &offset1, h5file, btstr, 1);
         free(buffer1);
     }
     else { 
@@ -336,7 +370,7 @@ int main(int argc, char** argv) {
         } // for ix = all data in 2d array
 
         // write destriped band M13 data back to file as float
-        status = readwrite_viirs_float(&bufferf1, dims1, argv[1], btstr, 1);
+        status = readwrite_viirs_float(&bufferf1, dims1, h5file, btstr, 1);
         free(bufferf1);
     }
 
@@ -348,7 +382,7 @@ int main(int argc, char** argv) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // write a destriping attribute
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    status = write_viirs_destriping_attribute(argv[1], attrfieldstr, attrnamestr, 1.0);
+    status = write_viirs_destriping_attribute(h5file, attrfieldstr, attrnamestr, 1.0);
     if(status<0) { 
         printf("ERROR: Cannot write VIIRS attribute!\n");
         return 40*status;
