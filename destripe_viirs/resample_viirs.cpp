@@ -1,3 +1,7 @@
+//
+// Resampling of image based on latitude
+//
+
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <stdarg.h>
@@ -5,6 +9,7 @@
 #include "resample_viirs.h"
 
 #define SGN(A)   ((A) > 0 ? 1 : ((A) < 0 ? -1 : 0 ))
+#define CHECKMAT(M, T)	CV_Assert((M).type() == (T) && (M).isContinuous())
 
 enum {
 	VIIRS_SWATH_SIZE = 16,
@@ -87,14 +92,14 @@ dumpfloat(const char *filename, float *buf, int nbuf)
 
 template <class T>
 static Mat
-resample_unsort_(Mat &sind, Mat &img)
+resample_unsort_(const Mat &sind, const Mat &img)
 {
 	Mat newimg;
 	int i, j, k;
 	int32_t *sp;
 	T *ip;
 
-	CV_Assert(sind.type() == CV_32SC1);
+	CHECKMAT(sind, CV_32SC1);
 	CV_Assert(img.channels() == 1);
 
 	newimg = Mat::zeros(img.rows, img.cols, img.type());
@@ -113,7 +118,7 @@ resample_unsort_(Mat &sind, Mat &img)
 // Returns the unsorted image of the sorted image img.
 // Sind is the image of sort indices.
 static Mat
-resample_unsort(Mat &sind, Mat &img)
+resample_unsort(const Mat &sind, const Mat &img)
 {
 	switch(img.type()){
 	default:
@@ -135,14 +140,14 @@ resample_unsort(Mat &sind, Mat &img)
 
 template <class T>
 static Mat
-resample_sort_(Mat &sind, Mat &img)
+resample_sort_(const Mat &sind, const Mat &img)
 {
 	Mat newimg;
 	int i, j, k;
 	int32_t *sp;
 	T *np;
 
-	CV_Assert(sind.type() == CV_32SC1);
+	CHECKMAT(sind, CV_32SC1);
 	CV_Assert(img.channels() == 1);
 
 	newimg = Mat::zeros(img.rows, img.cols, img.type());
@@ -161,7 +166,7 @@ resample_sort_(Mat &sind, Mat &img)
 // Returns the sorted image of the unsorted image img.
 // Sind is the image of sort indices.
 static Mat
-resample_sort(Mat &sind, Mat &img)
+resample_sort(const Mat &sind, const Mat &img)
 {
 	switch(img.type()){
 	default:
@@ -195,14 +200,16 @@ avg3(double a, double b, double c)
 // where sorted order is not the same as the original order.
 // Sind is the sort indices giving the sort order.
 static Mat
-avgfilter3(Mat &in, Mat &sind)
+avgfilter3(const Mat &in, const Mat &sind)
 {
+	const int *sindp;
+	const float *ip;
 	Mat out;
-	int i, j, rows, cols, *sindp;
-	float *ip, *op;
+	int i, j, rows, cols;
+	float *op;
 
-	CV_Assert(in.type() == CV_32FC1);
-	CV_Assert(sind.type() == CV_32SC1);
+	CHECKMAT(in, CV_32FC1);
+	CHECKMAT(sind, CV_32SC1);
 	rows = in.rows;
 	cols = in.cols;
 
@@ -228,14 +235,14 @@ avgfilter3(Mat &in, Mat &sind)
 // Slat is the latitude image, and slandmask is the land mask image.
 // All input arguments must already be sorted.
 static Mat
-resample_interp(Mat &simg, Mat &slat)
+resample_interp(const Mat &simg, const Mat &slat)
 {
 	int i, j, k, nbuf, *buf;
 	Mat newimg, bufmat;
 	double x, llat, rlat, lval, rval;
 
-	CV_Assert(simg.type() == CV_32FC1);
-	CV_Assert(slat.type() == CV_32FC1);
+	CHECKMAT(simg, CV_32FC1);
+	CHECKMAT(slat, CV_32FC1);
 
 	newimg = simg.clone();
 	bufmat = Mat::zeros(simg.rows, 1, CV_32SC1);
@@ -294,14 +301,14 @@ typedef enum Pole Pole;
 // Argsort latitude image 'lat' with given swath size.
 // Image of sort indices are return in 'sortidx'.
 static void
-argsortlat(Mat &lat, int swathsize, Mat &sortidx)
+argsortlat(const Mat &lat, int swathsize, Mat &sortidx)
 {
 	int i, j, off, width, height, dir, d, split;
 	Pole pole;
 	Mat col, idx, botidx;
 	Range colrg, toprg, botrg;
 	
-	CV_Assert(lat.type() == CV_32FC1);
+	CHECKMAT(lat, CV_32FC1);
 	CV_Assert(swathsize >= 2);
 	CV_Assert(lat.data != sortidx.data);
 	
