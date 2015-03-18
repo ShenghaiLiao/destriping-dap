@@ -252,6 +252,32 @@ int main(int argc, char** argv) {
         for(ix=0; ix<sx*sy; ix++){ img_in[0][ix] = bufferf1[ix]; }
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // destripe data
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    status = destripe_main_frame(img_in, img_out, binary_M, Ndet_arr[is], Niter_arr[is], NEdQ_arr[is], 
+                                 Tx_arr[is], Ty_arr[is], Qmin_arr[is], Qmax_arr[is], sx, sy);
+
+    if(status!=0) {
+        printf("ERROR: destriping failure\n"); 
+        return 100*status; 
+    }
+
+    // calculate NIF and NDF - see Ref. 1 for definitions
+    float nif, ndf;
+    int nwf;
+    get_nif_ndf( img_in, img_out, binary_M, sx, sy, &nif, &ndf, &nwf);
+    printf("VIIRS_band    NIF        NDF      domain_size\n");
+    printf("    %2i      %2.6f  %2.6f      %i\n", is, nif, ndf, nwf);
+
+    // Restore all values outside of the destriping domain
+    for(ix=0; ix<sx*sy; ix++){
+        if(binary_M[0][ix]) {
+            // for data outside destriping domain, return original data
+            img_out[0][ix] =  img_in[0][ix];
+        }
+    }
+    
     /////////////////////////////////////////////////////////////
     // reample data
     /////////////////////////////////////////////////////////////
@@ -273,29 +299,10 @@ int main(int argc, char** argv) {
         free(bufferf3);
 
         // resampling of image on sorted lon, lat grid
-        resample_viirs(img_in, lat, lon, sx, sy, Qmin_arr[is], Qmax_arr[is]);
+        resample_viirs(img_out, lat, lon, sx, sy, Qmin_arr[is], Qmax_arr[is]);
     }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    // destripe data
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    status = destripe_main_frame(img_in, img_out, binary_M, Ndet_arr[is], Niter_arr[is], NEdQ_arr[is], 
-                                 Tx_arr[is], Ty_arr[is], Qmin_arr[is], Qmax_arr[is], sx, sy);
-
-    if(status!=0) {
-        printf("ERROR: destriping failure\n"); 
-        return 100*status; 
-    }
-
-    // calculate NIF and NDF - see Ref. 1 for definitions
-    float nif, ndf;
-    int nwf;
-    get_nif_ndf( img_in, img_out, binary_M, sx, sy, &nif, &ndf, &nwf);
-    printf("VIIRS_band    NIF        NDF      domain_size\n");
-    printf("    %2i      %2.6f  %2.6f      %i\n", is, nif, ndf, nwf);
   
-    // Restore all values outside of the destriping domain
-    // and scale destriped data back to integers if band != M13
+    // Scale destriped data back to integers if band != M13
     if(is!=13) {
 #pragma omp parallel for private(ix, j)
         for(ix=0; ix<sx*sy; ix++){ 
@@ -313,29 +320,7 @@ int main(int argc, char** argv) {
                 j = 65535;
             }
 
-            // scale original data back to integer value
-            i = (int) round(( img_in[0][ix] - offset)/scale); 
-
-            // check if integer is in the valid range
-            if(j<0) { 
-                printf("Input  data out of range at ( %5i %5i ): %i\n", ix%sx, ix/sx, i);
-                i = 0;
-            }
-            if(j>65535) { 
-                printf("Input  data out of range at ( %5i %5i ): %i\n", ix%sx, ix/sx, i);
-                i = 65535;
-            }
-
-            if(binary_M[0][ix]==0) { 
-
-                // for data in destriping domain, return destriped data
-                buffer1[ix] = (unsigned short) j; 
-            }
-            else                   { 
-
-                // for data outside destriping domain, return original data
-                buffer1[ix] = (unsigned short) i; 
-            }
+            buffer1[ix] = (unsigned short) j;
 
         } // for ix = all data in 2d array
 
@@ -347,18 +332,7 @@ int main(int argc, char** argv) {
         // no conversion for band M13
 #pragma omp parallel for
         for(ix=0; ix<sx*sy; ix++) { 
-
-            if(binary_M[0][ix]==0) { 
-
-                // for data in destriping domain, return destriped data
-                bufferf1[ix] = img_out[0][ix]; 
-            } 
-            else                   {
-
-                // for data outside destriping domain, return original data
-                bufferf1[ix] =  img_in[0][ix]; 
-            }
-
+            bufferf1[ix] = img_out[0][ix]; 
         } // for ix = all data in 2d array
 
         // write destriped band M13 data back to file as float
