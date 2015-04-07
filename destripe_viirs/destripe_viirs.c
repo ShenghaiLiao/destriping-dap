@@ -28,45 +28,89 @@
 #include "get_nif_ndf.c"
 #include "resample_viirs.h"
 
-static int run(char *h5file, char *paramfile, int resample);
+static int run(char *h5file, char *paramfile, char *geofile, int resample);
 
 char *progname;
 
 static void
 usage()
 {
-    printf("usage: %s [-r] viirs_h5_file destriping_parameter_file_viirs.txt\n", progname);
-    printf("	-r	Resample destriping output using latitude\n");
+    printf("usage: %s [-r] [-g geofile] viirs_h5_file destriping_parameter_file_viirs.txt\n", progname);
+    printf("	-r	resample destriping output using latitude\n");
+    printf("	-g geofile\n");
+    printf("		geolocation file name\n");
     exit(2);
 }
+
+#define GETARG(x)	do{\
+		(x) = *argv++;\
+		argc--;\
+	}while(0);
 
 int
 main(int argc, char** argv)
 {
-    int resam, nthreads;
+    int i, j, resam, nthreads;
+    char *flag, *gfile, geofile[1024], *h5file, *paramfile;
 
-    progname = argv[0];
-    argc--;
-    argv++;
 
+    // parse arguments
+    GETARG(progname);
     resam = 0;
-    while(argc > 0 && argv[0][0] == '-'){
-        if(strcmp(argv[0], "--") == 0){
-            argc--;
-            argv++;
+    gfile = NULL;
+    while(argc > 0 && strlen(argv[0]) == 2 && argv[0][0] == '-'){
+        GETARG(flag);
+        
+        switch(flag[1]){
+        default:
+            usage();
+            break;
+        case '-':
+            goto argdone;
+        case 'g':
+            if(argc < 1)
+                usage();
+            GETARG(gfile)
+            break;
+        case 'r':
+            resam = 1;
             break;
         }
-        if(strcmp(argv[0], "-r") != 0)
-            usage();
-        resam = 1;
-        argc--;
-        argv++;
     }
+argdone:
     if(argc != 2)
         usage();
+    h5file = argv[0];
+    paramfile = argv[1];
 
     // echo command line
-    printf("destripe_viirs %s%s %s\n", resam?"-r ":"", argv[0], argv[1]);
+    printf("destripe_viirs %s%s%s %s %s\n",
+        resam ? "-r " : "",
+        gfile ? "-g " : "",
+        gfile ? gfile : "",
+        h5file, paramfile);
+
+    // generate the name of the corresponding geofile
+    if(gfile){
+        sprintf(geofile, "%s", gfile);
+    }else{
+        // start with provided SVM file name
+        sprintf(geofile, "%s", h5file);
+        for(j=(strlen(h5file)-6); j>=0; j--){
+            i = j;
+            if(h5file[j]=='/') { 
+                i = j + 1; 
+                break; 
+            }
+        }
+        // construct geolocation file name  - replace "SVMXY" with "GMODO"
+        geofile[i+0] = 'G';
+        geofile[i+1] = 'M';
+        geofile[i+2] = 'O';
+        geofile[i+3] = 'D';
+        geofile[i+4] = 'O';
+    }
+    printf("Corresponding geofile = %s\n", geofile);
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // set the number of OpenMP threads  
@@ -75,11 +119,11 @@ main(int argc, char** argv)
     omp_set_num_threads(nthreads); 
     printf("numthreads = %i maxthreads =  %i\n", omp_get_num_threads(), omp_get_max_threads());
 
-    return run(argv[0], argv[1], resam);
+    return run(h5file, paramfile, geofile, resam);
 }
 
 static int
-run(char *h5file, char *paramfile, int resam)
+run(char *h5file, char *paramfile, char *geofile, int resam)
 {
     unsigned short *buffer1  = NULL;
     float          *bufferf1 = NULL;
@@ -171,7 +215,7 @@ run(char *h5file, char *paramfile, int resam)
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // prepare all data field strings for later use
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    char attrfieldstr[128], attrnamestr[128], btstr[128], latstr[128], lonstr[128], geofile[1024];
+    char attrfieldstr[128], attrnamestr[128], btstr[128], latstr[128], lonstr[128];
 
     // destriping attribute field
     sprintf(attrfieldstr,"Data_Products/VIIRS-M%i-SDR/VIIRS-M%i-SDR_Aggr", is, is);
@@ -199,28 +243,6 @@ run(char *h5file, char *paramfile, int resam)
     // lat, lon data fields in geofile - normally not needed
     sprintf(latstr, "All_Data/VIIRS-MOD-GEO_All/Latitude");
     sprintf(lonstr, "All_Data/VIIRS-MOD-GEO_All/Longitude");
-
-    // generate the name of the corresponding geofile
-    // start with provided SVM file name
-    sprintf(geofile, "%s", h5file);
-  
-    for(j=(strlen(h5file)-6); j>=0; j--){
-        i = j;
-        if(h5file[j]=='/') { 
-            i = j + 1; 
-            break; 
-        }
-    }
-    
-
-    // construct geolocation file name  - replace "SVMXY" with "GMODO"
-    geofile[i+0] = 'G';
-    geofile[i+1] = 'M';
-    geofile[i+2] = 'O';
-    geofile[i+3] = 'D';
-    geofile[i+4] = 'O';
-
-    printf("Corresponding geofile = %s\n", geofile);
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
